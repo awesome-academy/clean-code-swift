@@ -709,5 +709,290 @@ func renderLargeShapes(shapes: [Shape]) {
 
 var rectangles = [Rectangle(width: 4, height: 5), Square(length: 5)]
 renderLargeShapes(shapes: rectangles)
-
 ```
+
+**[⬆ Về đầu trang](#mục-lục)**
+
+### Nguyên lí phân tách interface (Interface Segregation Principle)
+Nguyên lí phân tách interface nhấn mạnh rằng "Người dùng không nên bị bắt
+buộc phải phụ thuộc vào các interfaces mà họ không sử dụng."
+
+Một ví dụ tốt để minh hoạ cho nguyên lí này trong Swift là các lớp mà yêu
+cầu cài đặt các đối tượng lớn. Việc không yêu cầu người dùng thiết lập một số
+lượng lớn các phương thức là một điều tốt, bởi vì đa số họ không cần tất
+cả các cài đặt. Làm cho chúng trở thành tuỳ chọn giúp tránh được việc có một
+"fat interface".
+
+
+**[⬆ Về đầu trang](#mục-lục)**
+
+### Nguyên lí đảo ngược dependency (Dependency Inversion Principle)
+Với cách code thông thường, các module cấp cao sẽ gọi các module cấp thấp. 
+Module cấp cao sẽ phụ thuộc và module cấp thấp, điều đó tạo ra các dependency. 
+Khi module cấp thấp thay đổi, module cấp cao phải thay đổi theo. 
+Một thay đổi sẽ kéo theo hàng loạt thay đổi, giảm khả năng bảo trì của code.
+
+Nguyên lí này khẳng định hai điều cần thiết sau:
+1. Nhưng module cấp cao không nên phụ thuộc vào những module cấp thấp. Cả
+hai nên phụ thuộc vào abstraction.
+2. Abstraction (interface) không nên phụ thuộc vào chi tiết, mà ngược lại.
+
+Điều này có thể khó hiểu lúc ban đầu, nhưng nếu bạn đã từng làm việc với Angular.js,
+bạn đã thấy một sự hiện thực của nguyên lí này trong dạng của Dependency Injection
+(DI). Khi chúng không phải là các khái niệm giống nhau, DIP giữ cho module cấp
+cao không biết chi tiết các module cấp thấp của nó và thiết lập chúng. Có thể đạt
+được điều này thông qua DI. Một lợi ích to lớn của DIP là nó làm giảm sự phụ thuộc
+lẫn nhau giữa các module. Sự phụ thuộc lẫn nhau là một kiểu mẫu không tốt, vì nó
+làm cho việc tái cấu trúc code trở nên khó khăn.
+
+**Không tốt:**
+```swift
+// SavingHandler là module cấp cao
+class SavingHandler {
+
+    func save(at path: String) {
+        LocalFileHandler.shared.save(at: path)
+    } 
+}
+
+// LocalFileHandler laf module thấp
+class LocalFileHandler {
+    static let shared = LocalFileHandler()
+
+    func save(at path: String) {
+        //perform save local data
+    }
+}
+```
+
+**Tốt:**
+```swift
+// Protocol
+protocol Storage {
+    func save(at path: String)
+}
+ 
+ 
+// Module làm nhiệm vụ quản lý việc lưu trữ
+class SavingManager {
+
+    static let shared = SavingManager()
+
+    func save(_ path: String, _ storage: Storage) {
+        storage.save(at: path)
+    } 
+}
+
+// Các Module implement các protocol
+class FileSystemSaving: Storage {
+    func save(at path: String) {
+        // saving...
+    }
+}
+
+// Giờ muốn lưu gì thì chỉ cần gọi manage thôi
+func saveLocalData(_ path: String) {
+
+    let fileSystemSaving = FileSystemSaving()
+    
+    SavingManager.shared.save(path, fileSystemSaving)
+}
+```
+
+Trong thực tế, người ta thường áp dụng pattern DI (Dependency Injection) để đảm bảo nguyên lý DIP (Dependency Inversion Principle) trong code.
+
+**[⬆ Về đầu trang](#mục-lục)**
+
+## Testing
+Testing thì quan trọng hơn shipping. Nếu bạn không có test hoặc không đủ,
+thì mỗi lần ship code bạn sẽ không chắc là mình có làm hư hại thứ gì không.
+Việc quyết định những gì để tạo thành số lượng test đủ là do team của bạn,
+nhưng việc có 100% độ bao phủ (tất cả các câu lệnh và rẽ nhánh) là cách để
+bạn đạt được sự tự tin cao. Điều này có nghĩa ngoài việc có được một framework
+để test tốt, bạn cũng cần sử dụng một công cụ tính độ bao phủ tốt
+
+Không có lí do gì để không viết test. Có rất nhiều framework test Swift tốt,
+vì thế hãy tìm một framework mà team bạn thích. Khi đã tìm được một cái thích
+hợp với team của mình, hãy đặt mục tiêu để luôn luôn viết test cho mỗi tính
+năng hoặc module mới của bạn. Nếu phương pháp test ưa thích của bạn là Test
+Driven Development (TDD), điều đó thật tuyệt, nhưng điểm quan trọng là phải
+chắc chắn bạn đạt được mục tiêu về độ bao phủ trước khi launch một tính năng
+hoặc refactor một tính năng cũ nào đó.
+
+**[⬆ Về đầu trang](#mục-lục)**
+
+## Xử lí đồng thời
+### Hãy dùng higher-order function, đừng dùng callback tránh callback hell
+Tham khảo thư viện [ReactiveX/RxSwift](https://github.com/ReactiveX/RxSwift)
+
+**[⬆ Về đầu trang](#mục-lục)**
+
+## Xử lí lỗi
+Thông báo lỗi là một điều tốt! Nghĩa là chương trình của bạn nhận dạng
+được khi có một cái gì đó chạy không đúng và nó sẽ cho bạn biết bằng việc
+dừng chức năng mà nó đang thực thi và thông
+báo cho bạn trong console với một log để theo dấu.
+
+### Đừng bỏ qua những lỗi đã bắt được
+Nếu không làm gì với lỗi đã bắt được, bạn sẽ không thể sửa hoặc phản ứng
+lại được với lỗi đó. Ghi lỗi ra console (`console.log`) cũng không tốt hơn
+bao nhiêu vì đa số nó có thể bị trôi mất trong một đống những thứ được hiển
+thị ra ở console. Nếu bạn đặt bất cứ đoạn code nào trong một block `try/catch`,
+tức là bạn nghĩ một lỗi có thể xảy ra ở đây, do đó bạn nên có một giải pháp
+hoặc tạo một luồng code để xử lí lỗi khi nó xảy ra.
+
+**Không tốt:**
+```swift
+do {
+  try functionThatMightThrow()
+} catch (let error) {
+  print(error)
+}
+```
+
+**Tốt:**
+```swift
+do {
+  try functionThatMightThrow()
+} catch (let error) {
+  // One option (more noisy than console.log):
+  throw Error.error
+  // Another option:
+  notifyUserOfError(error)
+  // Another option:
+  reportErrorToService(error)
+  // OR do all three!
+}
+```
+
+**[⬆ Về đầu trang](#mục-lục)**
+
+## Định dạng
+Việc định dạng code mang tính chủ quan. Giống như nhiều quy tắc được trình
+bày trong tài liệu này, không có quy tắc nào cứng nhắc và nhanh chóng mà bạn
+bắt buộc phải tuân theo. Điểm chính của phần này là ĐỪNG BAO GIỜ TRANH CÃI
+về việc định dạng code như thế nào. Thật tốn thời gian và
+tiền bạc chỉ để tranh cãi về vấn đề định dạng code.
+
+Đối với những thứ không thuộc phạm vi của việc tự động định dạng code (thụt đầu
+dòng, tab và space, nháy đơn và nháy kép,..) hãy xem một số hướng dẫn ở [đây](https://github.com/raywenderlich/swift-style-guide).
+
+### Các hàm gọi và hàm được gọi nên nằm gần nhau
+Nếu một hàm gọi một hàm  khác, hãy giữ những hàm này nằm gần theo chiều dọc trong
+file. Lí tưởng là, hãy giữ cho hàm gọi ở trên hàm được gọi. Chúng ta có xu hướng
+đọc code từ trên xuống, giống như đọc báo vậy. Do đó, hãy làm cho code của chúng
+ta cũng được đọc theo cách đó.
+
+**[⬆ Về đầu trang](#mục-lục)**
+
+## Viết chú thích
+### Chỉ nên viết chú thích cho những thứ có logic phức tạp.
+Các chú thích thường là lời xin lỗi, chứ không phải là yêu cầu.
+Những đoạn code tốt thì *đa số* tự nó đã là tài liệu rồi.
+
+**Không tốt:**
+```swift
+func hashIt(data: String) {
+  // Khai báo hash
+  var hash = 0
+  // Lấy chiều dài của chuỗi
+  let length = data.length
+  // Lặp qua mỗi kí tự
+  data.forEach { 
+      // Chuyển kí tự qua số trong bảng Ascii
+      hash = $0.toInt()
+      // Chuyển số qua dạng binary
+      print(Int.toBinaryString(hash))
+   }
+}
+```
+
+**Tốt:**
+```swift
+func hashIt(data: String) {
+  var hash = 0
+  let length = data.length
+  data.forEach { 
+      hash = $0.toInt()
+      // Chuyển số qua dạng binary
+      print(Int.toBinaryString(hash))
+   }
+}
+```
+
+**[⬆ Về đầu trang](#mục-lục)**
+
+### Đừng giữ lại những đoạn code bị chú thích
+Những công cụ quản lí phiên bản sinh ra để làm nhiệm vụ của chúng.
+Hãy để code cũ của bạn nằm lại trong dĩ vãng đi.
+
+**Không tốt:**
+```swift
+doStuff()
+// doOtherStuff()
+// doSomeMoreStuff()
+// doSoMuchStuff()
+```
+
+**Tốt:**
+```swift
+doStuff()
+```
+**[⬆ Về đầu trang](#mục-lục)**
+
+### Đừng viết các chú thích nhật ký.
+Hãy nhớ, sử dụng công cụ quản lí phiên bản như Git! Chúng ta không cần những đoạn code
+vô dụng, bị chú thích và đặc biệt là những chú thích dạng nhật ký...
+Sử dụng `git log` để xem lịch sử được mà!
+
+**Không tốt:**
+```swift
+/**
+ * 2016-12-20: Removed monads, didn't understand them (RM)
+ * 2016-10-01: Improved using special monads (JP)
+ * 2016-02-03: Removed type-checking (LI)
+ * 2015-03-14: Added combine with type-checking (JR)
+ */
+func combine(a: Int, b: Int) -> Int {
+  return a + b
+}
+```
+
+**Tốt:**
+```swift
+func combine(a: Int, b: Int) -> Int {
+  return a + b
+}
+```
+**[⬆ Về đầu trang](#mục-lục)**
+
+### Tránh những đánh dấu vị trí
+Chúng thường xuyên làm nhiễu code. Hãy để những tên hàm, biến cùng với các
+định dạng thích hợp tự tạo thành cấu trúc trực quan cho code của bạn.
+
+**Không tốt:**
+```swift
+// MARK: Configure tableView
+
+private func configureTableView() {
+  // ...
+}
+
+// MARK: Action setup
+
+let actions = {
+  // ...
+}
+```
+
+**Tốt:**
+```swift
+private func configureTableView() {
+  // ...
+}
+
+let actions = {
+  // ...
+}
+```
+**[⬆ Về đầu trang](#mục-lục)**
